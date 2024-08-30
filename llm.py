@@ -8,11 +8,10 @@ from concurrent.futures import ThreadPoolExecutor
 
 
 # Load environment variables from .env file
-load_dotenv()
+client = Groq(
+    api_key=st.secrets["API_KEY"],
+)
 
-# Get the API key from the environment variable
-key = os.getenv('API_KEY')
-client = Groq(api_key=key)
 
 #taking user details
 def enter_details():
