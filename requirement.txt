@@ -2,5 +2,4 @@ streamlit
 opencv-python-headless
 pytesseract
 numpy
-groq
 python-dotenv
