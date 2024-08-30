@@ -1,6 +1,6 @@
-streamlit
-opencv-python-headless  
+opencv-python
 pytesseract
 numpy
-python-dotenv
+streamlit
 groq
+python-dotenv

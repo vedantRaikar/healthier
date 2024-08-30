@@ -3,6 +3,7 @@ import cv2
 import pytesseract
 import numpy as np 
 
+
 # Function to preprocess the image
 def preprocess_image(img):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
