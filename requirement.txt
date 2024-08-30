@@ -2,5 +2,5 @@ streamlit
 opencv-python-headless
 pytesseract
 numpy
-groq==1.0.0 
+groq==0.10.0
 python-dotenv
