@@ -3,6 +3,8 @@ import cv2
 import pytesseract
 import numpy as np 
 
+pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+
 
 # Function to preprocess the image
 def preprocess_image(img):
@@ -16,7 +18,6 @@ def preprocess_image(img):
 
 #function to perform ocr 
 def perform_ocr(img_path):
-    pytesseract.pytesseract.tesseract_cmd = r"/usr/bin/tesseract/tesseract.exe"
     img = cv2.imread(img_path)  
     img = preprocess_image(img)
     text = pytesseract.image_to_string(img, config='--oem 3 --psm 6') 
