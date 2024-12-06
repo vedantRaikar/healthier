@@ -6,3 +6,7 @@ Pillow
 scikit-learn                  
 wikipedia-api              
 opencv-python  
+tiktoken
+requests
+futures
+torch
