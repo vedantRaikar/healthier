@@ -1,11 +1,8 @@
-groq
-streamlit               
+groq              
 easyocr            
 python-dotenv   
 numpy                    
 Pillow                    
-scikit-learn            
-concurrent.futures        
-wikipedia-api             
-torch      
+scikit-learn                  
+wikipedia-api              
 opencv-python  
