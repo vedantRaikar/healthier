@@ -1,7 +1,7 @@
 # Import the necessary libraries
 import easyocr
 import cv2
-import matplotlib.pyplot as plt
+
 
 # Function to perform OCR using EasyOCR
 def perform_ocr_easyocr(img_path):
