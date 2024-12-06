@@ -1,0 +1,11 @@
+streamlit==1.25.0         # Adjust version based on the latest Streamlit version you use
+groq-client               # Replace with the exact name of the Groq client library if different
+easyocr==1.6.1            # Replace with the exact version you are using
+python-dotenv==1.0.0      # For loading environment variables from .env files
+numpy                     # Required by EasyOCR
+Pillow                    # Required for image handling
+scikit-learn              # For tfidf_keywords (if this function uses TfidfVectorizer)
+concurrent.futures        # Comes pre-installed with Python (no need to include in requirements)
+wikipedia-api             # If `fetch_wikipedia_context` uses Wikipedia API
+torch==1.12.1+cu113       # EasyOCR requires PyTorch (adjust version as needed)
+opencv-python-headless    # Required by EasyOCR for image preprocessing
