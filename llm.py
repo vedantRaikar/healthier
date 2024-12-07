@@ -52,8 +52,8 @@ def generate_content(prompt , context):
 def main():
     st.title("Personalized Health Assistant")
     #image_path = r"C:\Users\vedant raikar\Desktop\ocr health project\tesseract-ocr-project\test files\img4.jpg"
-    uploaded_file = st.file_uploader("Upload an image of food ingredients", type=["jpg", "jpeg", "png", "webp"])
-    
+    enable = st.checkbox("Enable camera")
+    uploaded_file = st.camera_input("Take a picture", disabled=not enable)
     if uploaded_file is not None:
         image_path = uploaded_file.name
         with open(image_path, "wb") as f:
@@ -70,8 +70,9 @@ def main():
             ocr_text = ocr_future.result()
         
         keys = tfidf_keywords(ocr_text)
+        if not keys: 
+            st.write("The image is invalid")
         
-        print(keys)
         cont = fetch_wikipedia_context(keys)
         p = f"Generate a concise summary of the context, emphasizing key points related to health, food products, and their nutritional or functional elements. Focus on highlighting essential details that relate to health benefits, ingredients, and any significant properties or effects associated with these food products taking in consideration {keys} are present in the product."
         conte =  generate_content(p , cont)
