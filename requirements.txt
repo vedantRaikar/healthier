@@ -10,3 +10,5 @@ requests
 futures
 torch
 opencv-python-headless
+Pillow
+
