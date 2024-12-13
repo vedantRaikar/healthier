@@ -80,56 +80,12 @@ def analyze_image_and_generate_response(image_path, user_details):
     st.subheader("Personalized Response")
     st.write(personalized_response.choices[0].message.content)
 
-def enable_flashlight():
-    """Embed JavaScript to enable flashlight on supported devices."""
-    st.components.v1.html(
-        """
-        <style>
-            .flashlight-btn {
-                display: inline-block;
-                background-color: #4CAF50;
-                color: white;
-                padding: 10px 20px;
-                font-size: 16px;
-                border: none;
-                border-radius: 5px;
-                cursor: pointer;
-                text-align: center;
-                transition: background-color 0.3s ease;
-            }
-            .flashlight-btn:hover {
-                background-color: #45a049;
-            }
-        </style>
-        <script>
-        async function enableFlashlight() {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-            const track = stream.getVideoTracks()[0];
-            const capabilities = track.getCapabilities();
-            if (capabilities.torch) {
-                await track.applyConstraints({ advanced: [{ torch: true }] });
-                alert('Flashlight enabled!');
-            } else {
-                alert('Flashlight not supported on this device.');
-            }
-        }
-        </script>
-        <button class="flashlight-btn" onclick="enableFlashlight()">Enable Flashlight</button>
-        """,
-        height=100,
-    )
-
 def main():
     """Main Streamlit app function."""
     st.title("Personalized Health Assistant")
 
-    # Enable camera input
-    enable_camera = st.checkbox("Enable camera")
-
-    if enable_camera:
-        enable_flashlight()
-
-    uploaded_file = st.camera_input("Take a picture", disabled=not enable_camera)
+    # Upload an image from the gallery
+    uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png", "webp"])
 
     if uploaded_file is not None:
         image_path = process_uploaded_image(uploaded_file)
