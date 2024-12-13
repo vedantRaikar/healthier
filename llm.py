@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 from concurrent.futures import ThreadPoolExecutor
 from context import fetch_wikipedia_context
 from preprocess import tfidf_keywords
+from PIL import Image
+import io
 
 # Load environment variables from .env file
 load_dotenv()
@@ -37,11 +39,19 @@ def generate_content(prompt, context):
     return response
 
 def process_uploaded_image(uploaded_file):
-    """Save the uploaded file and perform OCR."""
+    """Compress and save the uploaded image."""
     image_path = uploaded_file.name
-    with open(image_path, "wb") as f:
-        f.write(uploaded_file.getbuffer())
-    return image_path
+    try:
+        # Open the uploaded image
+        image = Image.open(uploaded_file)
+        # Compress the image and save it as JPEG
+        compressed_image_path = f"compressed_{image_path}"
+        image = image.convert("RGB")  # Ensure compatibility with JPEG
+        image.save(compressed_image_path, "JPEG", optimize=True, quality=70)
+        return compressed_image_path
+    except Exception as e:
+        st.error(f"Error processing image: {e}")
+        return None
 
 def analyze_image_and_generate_response(image_path, user_details):
     """Perform OCR on the image, extract context, and generate a personalized response."""
@@ -89,12 +99,15 @@ def main():
 
     if uploaded_file is not None:
         image_path = process_uploaded_image(uploaded_file)
-        user_details = enter_details()
+        if image_path:
+            user_details = enter_details()
 
-        if user_details:
-            analyze_image_and_generate_response(image_path, user_details)
+            if user_details:
+                analyze_image_and_generate_response(image_path, user_details)
+            else:
+                st.warning("Please submit your details to proceed.")
         else:
-            st.warning("Please submit your details to proceed.")
+            st.error("Failed to process the uploaded image.")
     else:
         st.warning("Please upload an image to analyze.")
 
