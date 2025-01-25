@@ -1,7 +1,7 @@
-# Import the necessary libraries
-import easyocr
 import cv2
-
+import numpy as np
+import easyocr
+from preprocess import tfidf_keywords
 
 # Function to perform OCR using EasyOCR
 def perform_ocr_easyocr(img_path):
@@ -14,6 +14,10 @@ def perform_ocr_easyocr(img_path):
 
     # Read the image using OpenCV
     img = cv2.imread(img_path)
+    if img is None:
+        raise FileNotFoundError(f"Image not found at {img_path}")
+
+    #img = apply_binarization(img)  # Pass image, not path
 
     # Perform OCR on the image
     results = reader.readtext(img)
@@ -30,3 +34,14 @@ def perform_ocr_easyocr(img_path):
         
     return text
 
+# if __name__ == "__main__":
+#     path = r"C:\Users\vedant raikar\Downloads\download.webp"
+#     try:
+#         text = perform_ocr_easyocr(path)
+#         filter_text = tfidf_keywords(text)
+#         print("Detected Filtered Text:")
+#         print(text)
+
+        
+#     except Exception as e:
+#         print(f"Error: {e}")

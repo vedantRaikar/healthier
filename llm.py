@@ -1,13 +1,15 @@
 import streamlit as st
 from groq import Groq
-from easy_ocr import perform_ocr_easyocr
+from paddle_ocr import extract_text_from_image
 import os
 from dotenv import load_dotenv
 from concurrent.futures import ThreadPoolExecutor
-from context import fetch_wikipedia_context
-from preprocess import tfidf_keywords
+from preprocess import yake_keywords
 from PIL import Image
 import io
+from context_FoodDataCentral import fetch_food_context
+from context import fetch_context
+
 
 # Load environment variables from .env file
 load_dotenv()
@@ -73,7 +75,7 @@ def analyze_image_and_generate_response(image_path, user_details):
     """Perform OCR on the image, extract context, and generate a personalized response."""
     try:
         with ThreadPoolExecutor() as executor:
-            ocr_future = executor.submit(perform_ocr_easyocr, image_path)
+            ocr_future = executor.submit(extract_text_from_image, image_path)
             ocr_text = ocr_future.result()
 
         if not ocr_text.strip():
@@ -81,19 +83,24 @@ def analyze_image_and_generate_response(image_path, user_details):
             return
 
         # Extract keywords and fetch context
-        keys = tfidf_keywords(ocr_text)
+        keys = yake_keywords(ocr_text)
         if not keys:
             st.error("Unable to extract relevant keywords from the image.")
             return
 
-        context = fetch_wikipedia_context(keys)
+        # Fetch context from all sources: FoodDataCentral, Wikipedia, and Arxiv
+        food_context = fetch_food_context(keys)
+        combined_wiki_arxiv_context = fetch_context(keys)
+        
+        # Combine all contexts
+        combined_context = food_context + "\n\n" + combined_wiki_arxiv_context
 
         # Generate concise summary
         summary_prompt = (
             f"Generate a concise summary of the context, emphasizing key points related to health, food products, "
             f"and their nutritional or functional elements. Highlight essential details considering these keywords: {keys}."
         )
-        summary = generate_content(summary_prompt, context)
+        summary = generate_content(summary_prompt, combined_context)
         if not summary:
             return
 
