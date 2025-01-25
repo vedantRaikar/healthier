@@ -7,7 +7,7 @@ requests
 futures
 yake
 torch
-opencv-python-headless
+opencv-python
 Pillow
 Python-IO
 langchain-community
