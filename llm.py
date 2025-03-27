@@ -10,11 +10,8 @@ import io
 from context_FoodDataCentral import fetch_food_context
 from context import fetch_context
 
-
-# Load environment variables from .env file
+# Load environment variables
 load_dotenv()
-
-# Get the API key from the environment variable
 key = os.getenv('API_KEY')
 if not key:
     st.error("API key is missing. Please set the API_KEY in your .env file.")
@@ -25,122 +22,128 @@ client = Groq(api_key=key)
 # Maximum file size for upload (in MB)
 MAX_FILE_SIZE_MB = 5
 
+# Custom CSS for transparent background image
+st.markdown("""
+    <style>
+        /* Transparent background image spanning the full page */
+        .stApp {
+            background: url('https://cdn.expresshealthcare.in/wp-content/uploads/2019/08/21181504/GettyImages-1040917000-1-e1566391534758-750x357.jpg') no-repeat center center fixed;
+            background-size: cover;
+            opacity: 1; /* Adjust transparency */
+        }
+        .main {
+            background-color: rgba(255, 255, 255, 0.85); /* Slightly opaque white background */
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .stButton>button {
+            background-color: #008CBA; 
+            color: white; 
+            border-radius: 5px;
+        }
+        .stTextInput, .stTextArea, .stNumberInput, .stSelectbox {
+            border-radius: 5px;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+# Sidebar for navigation
+st.sidebar.title("Navigation")
+st.sidebar.markdown("""
+    - 📄 **Enter Patient Details**
+    - 🖼️ **Upload Image for Analysis**
+    - 🔍 **Get Personalized Insights**
+""")
 
 def enter_details():
-    """Prompt user for their details and return them as a formatted string."""
-    name = st.text_input("What's your name?")
-    age = st.text_input("Enter your age:")
-    gender = st.selectbox("Enter your gender:", ("Male", "Female", "Other"))
-    disease = st.text_area("Enter the details of any disease you have:")
+    """Collect user details with better UI design."""
+    st.header("🩺 Patient Information")
+    with st.expander("Fill in your details 👇", expanded=True):
+        col1, col2 = st.columns(2)
+        with col1:
+            name = st.text_input("Full Name:")
+            age = st.number_input("Age:", min_value=0, max_value=120, step=1)
+            gender = st.radio("Gender:", ["Male", "Female"], horizontal=True)
+        with col2:
+            phone_number = st.text_input("Phone Number:")
+        
+        
+        weight = st.number_input("Weight (kg):", min_value=0.0, max_value=500.0, step=0.1)
+        height = st.number_input("Height (cm):", min_value=0.0, max_value=300.0, step=0.1)
+        allergies = st.text_area("Allergies:")
+        medications = st.text_area("Ongoing Medications:")
+        conditions = st.text_area("Medical Conditions:")
 
-    if st.button("Submit"):
-        return f"The person's age is: {age}, the patient's name is: {name}, the person's gender is: {gender}, The details about the person's health conditions: {disease}"
+        if st.button("✅ Submit Details"):
+            return {
+                "name": name, "age": age, "gender": gender, "phone": phone_number, "email": None,
+                "weight": weight, "height": height, "allergies": allergies,
+                "medications": medications, "conditions": conditions
+            }
     return None
 
-
-def generate_content(prompt, context):
-    """Generate a response using the Groq client based on the given prompt and context."""
-    try:
-        response = client.chat.completions.create(
-            messages=[
-                {"role": "system", "content": f"You are a health assistant with the following context: {context}. Think step by step."},
-                {"role": "user", "content": prompt},
-            ],
-            model="llama-3.1-8b-instant",  # Or "Llama-3-8B" depending on your preference
-        )
-        return response
-    except Exception as e:
-        st.error(f"Error generating content: {e}")
-        return None
-
-
 def process_uploaded_image(uploaded_file):
-    """Compress and save the uploaded image."""
+    """Handle image conversion and compression."""
     if uploaded_file.size > MAX_FILE_SIZE_MB * 1024 * 1024:
-        st.error(f"File size exceeds the limit of {MAX_FILE_SIZE_MB}MB. Please upload a smaller file.")
+        st.error(f"File too large! Max size: {MAX_FILE_SIZE_MB}MB.")
         return None
 
     try:
         image = Image.open(uploaded_file)
-        image_path = f"compressed_{uploaded_file.name}"
-        image = image.convert("RGB")  # Ensure compatibility with JPEG
-        image.save(image_path, "JPEG", optimize=True, quality=70)
-        return image_path
+        compressed_path = f"compressed_{uploaded_file.name}"
+        image.save(compressed_path, "JPEG", optimize=True, quality=70)
+        return compressed_path
     except Exception as e:
-        st.error(f"Error processing image: {e}")
+        st.error(f"Image processing failed: {e}")
         return None
 
-
-def analyze_image_and_generate_response(image_path, user_details):
-    """Perform OCR on the image, extract context, and generate a personalized response."""
-    try:
-        with ThreadPoolExecutor() as executor:
-            ocr_future = executor.submit(extract_text_from_image, image_path)
-            ocr_text = ocr_future.result()
-
-        if not ocr_text.strip():
-            st.error("The image contains no recognizable text.")
-            return
-
-        # Extract keywords and fetch context
+def analyze_image(image_path, user_details):
+    """Perform OCR, fetch context, and generate response."""
+    with st.spinner("🔍 Analyzing Image..."):
+        ocr_text = extract_text_from_image(image_path)
         keys = yake_keywords(ocr_text)
-        if not keys:
-            st.error("Unable to extract relevant keywords from the image.")
-            return
-
-        # Fetch context from all sources: FoodDataCentral, Wikipedia, and Arxiv
         food_context = fetch_food_context(keys)
-        combined_wiki_arxiv_context = fetch_context(keys)
+        additional_context = fetch_context(keys)
+        combined_context = food_context + "\n\n" + additional_context
         
-        # Combine all contexts
-        combined_context = food_context + "\n\n" + combined_wiki_arxiv_context
-
-        # Generate concise summary
-        summary_prompt = (
-            f"Generate a concise summary of the context, emphasizing key points related to health, food products, "
-            f"and their nutritional or functional elements. Highlight essential details considering these keywords: {keys}."
+        summary = client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": "Summarize the context."},
+                {"role": "user", "content": f"{combined_context}"}
+            ],
+            model="llama-3.3-70b-versatile"
         )
-        summary = generate_content(summary_prompt, combined_context)
-        if not summary:
-            return
-
-        # Generate personalized response
-        analysis_prompt = (
-            f"Analyze the following food ingredients: {ocr_text}, taking into account the user's details: {user_details}. "
-            f"Provide health benefits, potential concerns, and recommendations, including unfamiliar ingredients and their effects."
+        
+        analysis_prompt = f"Analyze {ocr_text} based on {user_details}. Provide health insights."
+        response = client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": summary.choices[0].message.content},
+                {"role": "user", "content": analysis_prompt}
+            ],
+            model="llama-3.3-70b-versatile"
         )
-        personalized_response = generate_content(analysis_prompt, summary.choices[0].message.content)
-        if not personalized_response:
-            return
-
-        # Display personalized response
-        st.subheader("Personalized Response")
-        st.write(personalized_response.choices[0].message.content)
-
-    except Exception as e:
-        st.error(f"Error analyzing image or generating response: {e}")
-
+        
+    st.success("✅ Analysis Complete!")
+    st.subheader("Personalized Insights 🧑‍⚕️")
+    st.write(response.choices[0].message.content)
 
 def main():
-    """Main Streamlit app function."""
-    st.title("Personalized Health Assistant")
+    """Main Streamlit app function with improved UI."""
 
-    # Upload an image from the gallery
-    uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png", "webp"], help="Maximum file size: 5MB")
 
-    if uploaded_file is not None:
+    uploaded_file = st.file_uploader("📸 Upload an image", type=["jpg", "jpeg", "png"], help="Max: 5MB")
+    st.title("🏥 Health Recommendation System")
+    user_details = enter_details()
+    if uploaded_file and user_details:
         image_path = process_uploaded_image(uploaded_file)
         if image_path:
-            user_details = enter_details()
-
-            if user_details:
-                analyze_image_and_generate_response(image_path, user_details)
-            else:
-                st.warning("Please submit your details to proceed.")
+            analyze_image(image_path, user_details)
         else:
-            st.error("Failed to process the uploaded image.")
+            st.error("❌ Image processing failed.")
     else:
-        st.warning("Please upload an image to analyze.")
+        st.warning("Upload an image and enter details to proceed.")
+
+
 
 
 if __name__ == "__main__":

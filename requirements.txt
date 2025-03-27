@@ -7,7 +7,7 @@ requests
 futures
 yake
 torch
-opencv-python
+opencv-python-headless
 Pillow
 Python-IO
 langchain-community
@@ -15,4 +15,6 @@ tiktoken
 paddlepaddle
 paddleocr
 requests
+PyOpenGL
+PyOpenGL_accelerate
 
