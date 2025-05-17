@@ -6,7 +6,6 @@ import tiktoken
 from functools import lru_cache
 import threading
 
-# Simple in-memory cache
 cache = {}
 
 # Define the token limit

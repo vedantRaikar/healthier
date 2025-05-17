@@ -142,9 +142,6 @@ def main():
             st.error("❌ Image processing failed.")
     else:
         st.warning("Upload an image and enter details to proceed.")
-
-
-
-
+        
 if __name__ == "__main__":
     main()

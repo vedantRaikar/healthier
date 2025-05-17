@@ -7,7 +7,7 @@ requests
 futures
 yake
 torch
-opencv-python-headless==4.5.3.56
+opencv-python-headless
 Pillow
 Python-IO
 langchain-community
@@ -17,4 +17,5 @@ paddleocr
 requests
 PyOpenGL
 PyOpenGL_accelerate
+ultralytics
 
